@@ -8,7 +8,10 @@ import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.linkedin.kafka.cruisecontrol.common.Resource;
 import com.linkedin.kafka.cruisecontrol.KafkaCruiseControlUtils;
+import com.linkedin.kafka.cruisecontrol.common.Utils;
+import com.linkedin.kafka.cruisecontrol.config.constants.MonitorConfig;
 import com.linkedin.kafka.cruisecontrol.exception.BrokerCapacityResolutionException;
+import org.apache.kafka.common.Cluster;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -17,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -153,6 +157,7 @@ public class BrokerCapacityConfigFileResolver implements BrokerCapacityConfigRes
   public static final double DEFAULT_CPU_CAPACITY_WITH_CORES = 100.0;
   private static Map<Integer, BrokerCapacityInfo> capacitiesForBrokers;
   private String _configFile;
+  private List<String> bootstrapServers;
 
   @Override
   public void configure(Map<String, ?> configs) {
@@ -162,6 +167,8 @@ public class BrokerCapacityConfigFileResolver implements BrokerCapacityConfigRes
     } catch (FileNotFoundException e) {
       throw new IllegalArgumentException(e);
     }
+
+    bootstrapServers = (List<String>) configs.get(MonitorConfig.BOOTSTRAP_SERVERS_CONFIG);
   }
 
   @Override
@@ -186,6 +193,11 @@ public class BrokerCapacityConfigFileResolver implements BrokerCapacityConfigRes
     } else {
       throw new IllegalArgumentException("The broker id(" + brokerId + ") should be non-negative.");
     }
+  }
+
+  @Override
+  public Cluster getCluster() {
+    return Utils.getClusterFromBrokersUrls(bootstrapServers);
   }
 
   private static boolean isJBOD(Map<Resource, Object> brokerCapacity) {

@@ -4,7 +4,12 @@
 
 package com.linkedin.kafka.cruisecontrol.common;
 
+import org.apache.kafka.clients.ClientDnsLookup;
+import org.apache.kafka.clients.ClientUtils;
+import org.apache.kafka.common.Cluster;
+import java.net.InetSocketAddress;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -31,5 +36,16 @@ public final class Utils {
                              .stream()
                              .filter(topicName -> topicNamePattern.matcher(topicName).matches())
                              .collect(Collectors.toSet());
+  }
+
+  /**
+   * Creates a Kafka cluster based on Brokers URLs
+   * @param brokersUrls Brokers URLs list.
+   * @return Kafka cluster based on provided list
+   */
+  public static Cluster getClusterFromBrokersUrls(List<String> brokersUrls) {
+    List<InetSocketAddress> addresses =
+            ClientUtils.parseAndValidateAddresses(brokersUrls, ClientDnsLookup.USE_ALL_DNS_IPS);
+    return Cluster.bootstrap(addresses);
   }
 }

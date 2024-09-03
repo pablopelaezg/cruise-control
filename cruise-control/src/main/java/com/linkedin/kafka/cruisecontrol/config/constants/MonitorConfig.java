@@ -365,6 +365,44 @@ public final class MonitorConfig {
   public static final String METADATA_FACTOR_EXPONENT_DOC = "The exponent for the metadata factor, which corresponds to "
       + "(number of replicas) * (number of brokers with replicas) ^ exponent.";
 
+  /**
+   * <code>broker.capacity.config.resolver.aws.refresh.period.minutes</code>
+   */
+  public static final String BROKER_CAPACITY_CONFIG_RESOLVER_AWS_FETCH_PERIOD_MINUTES = "broker.capacity.config.resolver.aws.refresh.period.minutes";
+  public static final int DEFAULT_BROKER_CAPACITY_CONFIG_RESOLVER_AWS_FETCH_PERIOD_MINUTES = 15;
+  public static final String BROKER_CAPACITY_CONFIG_RESOLVER_AWS_FETCH_PERIOD_MINUTES_DOC = "Indicates the AWS Cluster Capacity refresh periodicity.";
+
+  //AWS SPECIFIC PROPERTIES
+  /**
+   * <code>aws.msk.cluster.arn</code>
+   */
+  public static final String MSK_CLUSTER_ARN = "aws.msk.cluster.arn";
+  public static final String DEFAULT_MSK_CLUSTER_ARN = "";
+  public static final String MSK_CLUSTER_ARN_DOC = "ARN referring to the AWS MSK cluster.";
+
+  /**
+   * <code>aws.msk.cluster.region</code>
+   */
+  public static final String MSK_CLUSTER_REGION = "aws.msk.cluster.region";
+  public static final String DEFAULT_MSK_CLUSTER_REGION = "";
+  public static final String MSK_CLUSTER_REGION_DOC = "Region of the AWS MSK cluster.";
+
+  /**
+   * <code>aws.msk.broker.cpu.capacity.ratio</code>
+   */
+  public static final String MSK_CPU_CAPACITY_RATIO = "aws.msk.broker.cpu.capacity.ratio";
+  public static final double DEFAULT_MSK_CPU_CAPACITY_RATIO = 1.0;
+  public static final String MSK_CPU_CAPACITY_RATIO_DOC = "Defines how much of the cluster brokers CPU is available for "
+          + "Kafka operation. Default is 100%";
+
+  /**
+   * <code>aws.msk.broker.network.inbound.traffic.ratio</code>
+   */
+  public static final String MSK_NETWORK_INBOUND_TRAFFIC_RATIO = "aws.msk.broker.network.inbound.traffic.ratio";
+  public static final double DEFAULT_MSK_NETWORK_INBOUND_TRAFFIC_RATIO = 0.5;
+  public static final String MSK_NETWORK_INBOUND_TRAFFIC_RATIO_DOC = "Defines how much of the available Broker network bandwidth "
+          + "will be dedicated to inbound traffic. Outbound traffic ratio will be (1 - inbound). Default is 50% inbound - 50% outbound.";
+
   private MonitorConfig() {
   }
 
@@ -375,7 +413,7 @@ public final class MonitorConfig {
    * @return The given ConfigDef after defining the configs for Monitor.
    */
   public static ConfigDef define(ConfigDef configDef) {
-    return configDef.define(BOOTSTRAP_SERVERS_CONFIG,
+    ConfigDef configDefBase = configDef.define(BOOTSTRAP_SERVERS_CONFIG,
                             ConfigDef.Type.LIST,
                             ConfigDef.Importance.HIGH,
                             BOOTSTRAP_SERVERS_DOC)
@@ -607,6 +645,34 @@ public final class MonitorConfig {
                             DEFAULT_METADATA_FACTOR_EXPONENT,
                             atLeast(1.0),
                             ConfigDef.Importance.LOW,
-                            METADATA_FACTOR_EXPONENT_DOC);
+                            METADATA_FACTOR_EXPONENT_DOC)
+                    .define(BROKER_CAPACITY_CONFIG_RESOLVER_AWS_FETCH_PERIOD_MINUTES,
+                            ConfigDef.Type.INT,
+                            DEFAULT_BROKER_CAPACITY_CONFIG_RESOLVER_AWS_FETCH_PERIOD_MINUTES,
+                            ConfigDef.Importance.LOW,
+                            BROKER_CAPACITY_CONFIG_RESOLVER_AWS_FETCH_PERIOD_MINUTES_DOC);
+
+    // Add AWS specific properties
+    return configDefBase
+                    .define(MSK_CLUSTER_ARN,
+                            ConfigDef.Type.STRING,
+                            DEFAULT_MSK_CLUSTER_ARN,
+                            ConfigDef.Importance.LOW,
+                            MSK_CLUSTER_ARN_DOC)
+                    .define(MSK_CLUSTER_REGION,
+                            ConfigDef.Type.STRING,
+                            DEFAULT_MSK_CLUSTER_REGION,
+                            ConfigDef.Importance.LOW,
+                            MSK_CLUSTER_REGION_DOC)
+                    .define(MSK_CPU_CAPACITY_RATIO,
+                            ConfigDef.Type.DOUBLE,
+                            DEFAULT_MSK_CPU_CAPACITY_RATIO,
+                            ConfigDef.Importance.LOW,
+                            MSK_CPU_CAPACITY_RATIO_DOC)
+                    .define(MSK_NETWORK_INBOUND_TRAFFIC_RATIO,
+                            ConfigDef.Type.DOUBLE,
+                            DEFAULT_MSK_NETWORK_INBOUND_TRAFFIC_RATIO,
+                            ConfigDef.Importance.LOW,
+                            MSK_NETWORK_INBOUND_TRAFFIC_RATIO_DOC);
   }
 }

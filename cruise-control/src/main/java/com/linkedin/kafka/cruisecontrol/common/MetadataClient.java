@@ -5,15 +5,13 @@
 package com.linkedin.kafka.cruisecontrol.common;
 
 import com.linkedin.kafka.cruisecontrol.KafkaCruiseControlUtils;
+import com.linkedin.kafka.cruisecontrol.config.BrokerCapacityConfigResolver;
 import com.linkedin.kafka.cruisecontrol.config.KafkaCruiseControlConfig;
 import com.linkedin.kafka.cruisecontrol.config.constants.MonitorConfig;
 import com.linkedin.kafka.cruisecontrol.monitor.MonitorUtils;
-import java.net.InetSocketAddress;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kafka.clients.ApiVersions;
-import org.apache.kafka.clients.ClientDnsLookup;
 import org.apache.kafka.clients.ClientUtils;
 import org.apache.kafka.clients.Metadata;
 import org.apache.kafka.clients.NetworkClient;
@@ -46,10 +44,9 @@ public class MetadataClient {
     _metadata = metadata;
     _refreshMetadataTimeout = config.getLong(MonitorConfig.METADATA_MAX_AGE_MS_CONFIG);
     _time = time;
-    List<InetSocketAddress> addresses =
-        ClientUtils.parseAndValidateAddresses(config.getList(MonitorConfig.BOOTSTRAP_SERVERS_CONFIG),
-                                              ClientDnsLookup.USE_ALL_DNS_IPS);
-    Cluster bootstrapCluster = Cluster.bootstrap(addresses);
+
+    Cluster bootstrapCluster = config.getConfiguredInstance(MonitorConfig.BROKER_CAPACITY_CONFIG_RESOLVER_CLASS_CONFIG,
+            BrokerCapacityConfigResolver.class).getCluster();
     MetadataResponse metadataResponse = KafkaCruiseControlUtils.prepareMetadataResponse(bootstrapCluster.nodes(),
                                                                                         bootstrapCluster.clusterResource().clusterId(),
                                                                                         MetadataResponse.NO_CONTROLLER_ID,

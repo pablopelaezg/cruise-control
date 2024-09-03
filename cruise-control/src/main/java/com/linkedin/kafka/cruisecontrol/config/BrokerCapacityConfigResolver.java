@@ -3,11 +3,10 @@
  */
 
 package com.linkedin.kafka.cruisecontrol.config;
-
 import com.linkedin.cruisecontrol.common.CruiseControlConfigurable;
 import com.linkedin.kafka.cruisecontrol.exception.BrokerCapacityResolutionException;
+import org.apache.kafka.common.Cluster;
 import java.util.concurrent.TimeoutException;
-
 
 /**
  * The interface for getting the broker capacity. Users should implement this interface so Cruise Control can
@@ -31,4 +30,13 @@ public interface BrokerCapacityConfigResolver extends CruiseControlConfigurable,
    */
   BrokerCapacityInfo capacityForBroker(String rack, String host, int brokerId, long timeoutMs, boolean allowCapacityEstimation)
       throws TimeoutException, BrokerCapacityResolutionException;
+
+  /**
+   * Get the capacity of a broker based on rack, host and broker id.
+   * May estimate the capacity of a broker, if it is not directly available.
+   *
+   * @return An instance of {@link BrokerCapacityInfo}.
+   *
+   */
+  Cluster getCluster();
 }
