@@ -62,7 +62,7 @@ public class AWSClientTest {
 
         Map<Resource, Double> capacity = result.getRight().capacity();
         assertEquals(Double.valueOf(100.0), capacity.get(Resource.CPU));
-        assertEquals(Double.valueOf(100.0), capacity.get(Resource.DISK));
+        assertEquals(Double.valueOf(100000.0), capacity.get(Resource.DISK));
         assertEquals(Double.valueOf(5000000.0), capacity.get(Resource.NW_IN));
         assertEquals(Double.valueOf(5000000.0), capacity.get(Resource.NW_OUT));
     }

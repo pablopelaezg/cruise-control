@@ -4,15 +4,12 @@
 package com.linkedin.kafka.cruisecontrol.config;
 
 import com.linkedin.kafka.cruisecontrol.aws.AWSClient;
-import com.linkedin.kafka.cruisecontrol.common.Utils;
 import com.linkedin.kafka.cruisecontrol.config.constants.MonitorConfig;
 import com.linkedin.kafka.cruisecontrol.exception.BrokerCapacityResolutionException;
-import org.apache.kafka.common.Cluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.kafka.model.ClusterState;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -35,18 +32,10 @@ public class AmazonMSKBrokerCapacityConfigResolver implements BrokerCapacityConf
                                                 long timeoutMs,
                                                 boolean allowCapacityEstimation)
             throws TimeoutException, BrokerCapacityResolutionException {
-        LOG.info("Querying cached AWS MSK Capacity Info: {}", _capacityInfo.get());
-        return _capacityInfo.get();
-    }
 
-    @Override
-    public Cluster getCluster() {
-        try {
-            return Utils.getClusterFromBrokersUrls(_awsClient.getClusterBrokers());
-        } catch (AwsServiceException awsException) {
-            LOG.error("Failed to get Bootstrap Servers Info", awsException);
-            return Utils.getClusterFromBrokersUrls(Collections.emptyList());
-        }
+        LOG.info("Querying cached AWS MSK Capacity Info: {}", _capacityInfo.get() == null ? "EMPTY"
+                : _capacityInfo.get().capacity());
+        return _capacityInfo.get();
     }
 
     @Override
@@ -61,7 +50,7 @@ public class AmazonMSKBrokerCapacityConfigResolver implements BrokerCapacityConf
                 .orElseThrow(() -> new IllegalArgumentException("AWS Broker Data Source is enabled, "
                         + "so AWS MSK cluster region is not allowed to be empty"));
         Double cpuRatio = ((Double) configs.get(MonitorConfig.MSK_CPU_CAPACITY_RATIO));
-        Double incomingNetworkRatio = ((Double) configs.get(MonitorConfig.MSK_CPU_CAPACITY_RATIO));
+        Double incomingNetworkRatio = ((Double) configs.get(MonitorConfig.MSK_NETWORK_INBOUND_TRAFFIC_RATIO));
 
         _awsClient = getAWSClient(clusterArn, clusterRegion, cpuRatio, incomingNetworkRatio);
         Integer refreshPeriodMinutes = (Integer) configs.get(
@@ -87,6 +76,7 @@ public class AmazonMSKBrokerCapacityConfigResolver implements BrokerCapacityConf
     }
 
     protected ScheduledExecutorService getCapacityRefresher(Integer refreshPeriodMinutes) {
+        LOG.info("Creating Broker capacity refresher executor. Refresh period: {} minutes", refreshPeriodMinutes);
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(this::refreshCapacityInfo, 0L, refreshPeriodMinutes, TimeUnit.MINUTES);
         return executorService;

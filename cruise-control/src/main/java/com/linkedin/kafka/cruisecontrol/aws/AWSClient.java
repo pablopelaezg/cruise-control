@@ -16,11 +16,7 @@ import software.amazon.awssdk.services.kafka.KafkaClient;
 import software.amazon.awssdk.services.kafka.model.ClusterState;
 import software.amazon.awssdk.services.kafka.model.DescribeClusterRequest;
 import software.amazon.awssdk.services.kafka.model.DescribeClusterResponse;
-import software.amazon.awssdk.services.kafka.model.GetBootstrapBrokersRequest;
-import software.amazon.awssdk.services.kafka.model.GetBootstrapBrokersResponse;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class AWSClient implements AutoCloseable {
@@ -78,17 +74,8 @@ public class AWSClient implements AutoCloseable {
         return Pair.of(describeClusterResponse.clusterInfo().state(), new BrokerCapacityInfo(capacities));
     }
 
-    /**
-     * Fetches the Bootstrap servers from the AWS MSK Cluster
-     * @return List of Bootstrap servers
-     */
-    public List<String> getClusterBrokers() {
-        GetBootstrapBrokersResponse response = _kafkaClient.getBootstrapBrokers(GetBootstrapBrokersRequest.builder().clusterArn(_clusterArn).build());
-        return Arrays.asList(response.bootstrapBrokerStringSaslIam().split(","));
-    }
-
     private Double getDiskCapacity(DescribeClusterResponse describeClusterResponse) {
-        return describeClusterResponse.clusterInfo().brokerNodeGroupInfo().storageInfo().ebsStorageInfo().volumeSize().doubleValue();
+        return describeClusterResponse.clusterInfo().brokerNodeGroupInfo().storageInfo().ebsStorageInfo().volumeSize().doubleValue() * 1000;
     }
 
     private String getEC2InstanceType(DescribeClusterResponse describeClusterResponse) {
@@ -97,10 +84,10 @@ public class AWSClient implements AutoCloseable {
 
     private double parseNetworkPerformance(String networkPerformance) {
         if (networkPerformance != null) {
-            if(networkPerformance.contains("Gigabit")) {
+            if (networkPerformance.contains("Gigabit")) {
                 return Double.parseDouble(networkPerformance.replaceAll("[^\\d.]", "")) * 1000000;
             } else if (networkPerformance.contains("Megabit")) {
-                return Double.parseDouble(networkPerformance.replaceAll("[^\\d.]", "")) * 1000 ;
+                return Double.parseDouble(networkPerformance.replaceAll("[^\\d.]", "")) * 1000;
             }
         }
         return 0.0;
